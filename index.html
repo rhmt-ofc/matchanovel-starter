@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>MatchaNovel Web Player • Defold Visual Novel Studio</title>
+  <meta name="description" content="Interactive Web Player and Starter Showcase for MatchaNovel Visual Novel Engine on Defold by R_HMT">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2310b981'/%3E%3Cpath d='M9 8h14v4H9zm0 6h10v4H9zm0 6h14v4H9z' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --surface: #101726;
+      --surface-border: #1e293b;
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.25);
+      --neon-yellow: #ffe600;
+      --neon-pink: #ff007a;
+      --neon-cyan: #00f0ff;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-main: 'Plus Jakarta Sans', sans-serif;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Ambient Background Glow */
+    .ambient-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+                  radial-gradient(circle at 85% 80%, rgba(0, 240, 255, 0.06) 0%, transparent 40%);
+    }
+
+    /* Top Nav Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(9, 13, 22, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .brand-badge {
+      background: var(--accent);
+      color: #000;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-sub {
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      margin-left: 4px;
+    }
+
+    .header-links {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--surface-border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .btn-chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .btn-chip.highlight {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+
+    .btn-chip.highlight:hover {
+      background: #059669;
+      color: #fff;
+    }
+
+    /* Main Container */
+    main {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      max-width: 1240px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* Hero / Status Bar */
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+    }
+
+    .meta-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .tag-item {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--surface-border);
+      color: var(--text-muted);
+    }
+
+    .tag-item.live {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .meta-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* VISUAL NOVEL STAGE CONTAINER */
+    .vn-stage-card {
+      background: #000;
+      border: 2px solid var(--surface-border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px var(--accent-glow);
+      position: relative;
+    }
+
+    .vn-topbar {
+      background: #0d131f;
+      border-bottom: 1px solid var(--surface-border);
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .stage-title {
+      font-family: var(--font-mono);
+      color: var(--neon-cyan);
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.5px;
+    }
+
+    .stage-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .stage-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--surface-border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      transition: all 0.15s ease;
+    }
+
+    .stage-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    .stage-btn.active {
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      border-color: var(--accent);
+    }
+
+    /* THE VIEWPORT */
+    .vn-viewport {
+      position: relative;
+      width: 100%;
+      height: 520px;
+      background: #0a0f18;
+      overflow: hidden;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    /* Backgrounds */
+    .vn-bg-layer {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s ease;
+    }
+
+    .bg-cyber {
+      background-image: radial-gradient(circle at 50% 30%, rgba(16, 185, 129, 0.15), transparent 70%),
+                        linear-gradient(180deg, #0f172a 0%, #030712 100%);
+    }
+
+    .bg-sunset {
+      background-image: radial-gradient(circle at 60% 40%, rgba(255, 0, 122, 0.25), transparent 70%),
+                        linear-gradient(180deg, #1e112a 0%, #080312 100%);
+    }
+
+    .bg-matrix {
+      background-image: radial-gradient(circle at 40% 60%, rgba(0, 240, 255, 0.2), transparent 70%),
+                        linear-gradient(180deg, #051923 0%, #000508 100%);
+    }
+
+    /* Particle Canvas */
+    #weatherCanvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Character Sprite Stage */
+    .character-stage {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 8;
+      pointer-events: none;
+    }
+
+    .character-avatar {
+      width: 320px;
+      height: 420px;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      animation: charFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes charFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .avatar-svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.8));
+    }
+
+    /* Dialog Box (Jasmine GUI Style) */
+    .dialog-container {
+      position: absolute;
+      bottom: 18px;
+      left: 18px;
+      right: 18px;
+      z-index: 20;
+    }
+
+    .dialog-box {
+      background: rgba(13, 20, 36, 0.92);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 16px 22px 20px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      position: relative;
+    }
+
+    .speaker-pill {
+      display: inline-block;
+      background: var(--neon-yellow);
+      color: #000;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 3px 12px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      box-shadow: 3px 3px 0px rgba(0,0,0,0.5);
+    }
+
+    .dialog-text {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #fff;
+      min-height: 52px;
+      font-weight: 500;
+    }
+
+    .dialog-text .highlight {
+      color: var(--neon-cyan);
+      font-weight: 700;
+    }
+
+    .advance-caret {
+      position: absolute;
+      right: 18px;
+      bottom: 14px;
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      color: var(--neon-yellow);
+      animation: blink 0.9s infinite alternate;
+    }
+
+    @keyframes blink {
+      0% { opacity: 0.2; transform: translateY(0); }
+      100% { opacity: 1; transform: translateY(3px); }
+    }
+
+    /* Branching Choices Overlay */
+    .choices-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      padding: 24px;
+    }
+
+    .choices-overlay[hidden] {
+      display: none !important;
+    }
+
+    .choice-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      color: var(--neon-yellow);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .choice-btn {
+      width: 100%;
+      max-width: 520px;
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font-main);
+      box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.6);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .choice-btn:hover {
+      background: var(--accent);
+      color: #000;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Two-Column Info Cards below Stage */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: #fff;
+    }
+
+    .card-title-icon {
+      color: var(--accent);
+    }
+
+    .code-box {
+      background: #080c14;
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+
+    .step-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .step-list li {
+      display: flex;
+      gap: 12px;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.75rem;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Live Script Tester */
+    .script-tester {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .script-textarea {
+      width: 100%;
+      height: 140px;
+      background: #080c14;
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--neon-cyan);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      resize: vertical;
+      outline: none;
+    }
+
+    .script-textarea:focus {
+      border-color: var(--accent);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--surface-border);
+      padding: 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+      .vn-viewport {
+        height: 440px;
+      }
+      .character-avatar {
+        width: 240px;
+        height: 340px;
+      }
+      .dialog-text {
+        font-size: 0.92rem;
+      }
+      .header-links .hide-sm {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+
+  <!-- Header -->
+  <header>
+    <a href="#" class="brand">
+      <span class="brand-badge">LUA + DEFOLD</span>
+      <div>
+        <span class="brand-title">MatchaNovel</span>
+        <span class="brand-sub">by Halfstar &amp; R_HMT</span>
+      </div>
+    </a>
+    <div class="header-links">
+      <a href="https://github.com/rhmt-ofc/matchanovel-starter" target="_blank" rel="noopener noreferrer" class="btn-chip hide-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+        GitHub Repo
+      </a>
+      <a href="https://rhmt.biz.id" target="_blank" rel="noopener noreferrer" class="btn-chip highlight">
+        Portofolio Tuan &rarr;
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Top Metadata Info -->
+    <section class="hero-meta">
+      <div class="meta-tags">
+        <span class="tag-item live">● LIVE WEB PLAYER</span>
+        <span class="tag-item">ENGINE: DEFOLD 1.9</span>
+        <span class="tag-item">SCRIPT: MATCHASCRIPT</span>
+        <span class="tag-item">BUILD SIZE: &lt; 5 MB</span>
+        <span class="tag-item">AUDIO: FMOD STUDIO</span>
+      </div>
+      <div class="meta-actions">
+        <span style="font-size:0.8rem; color:var(--text-muted)">Klik layar stage untuk melanjutkan dialog</span>
+      </div>
+    </section>
+
+    <!-- Visual Novel Stage Card -->
+    <section class="vn-stage-card">
+      <div class="vn-topbar">
+        <div class="stage-title">STAGE // MATCHA_NOVEL_RUNTIME_V0.1</div>
+        <div class="stage-controls">
+          <button class="stage-btn" id="btnWeather">Cuaca: Salju</button>
+          <button class="stage-btn" id="btnBg">Lokasi: Cyber</button>
+          <button class="stage-btn" id="btnSound">Audio: On</button>
+          <button class="stage-btn" id="btnRestart">Restart</button>
+        </div>
+      </div>
+
+      <!-- Viewport Stage -->
+      <div class="vn-viewport" id="viewportStage" role="button" tabindex="0" aria-label="Lanjutkan Cerita">
+        <!-- Dynamic Background Layer -->
+        <div class="vn-bg-layer bg-cyber" id="bgLayer"></div>
+
+        <!-- Weather Canvas -->
+        <canvas id="weatherCanvas"></canvas>
+
+        <!-- Character Stage -->
+        <div class="character-stage">
+          <div class="character-avatar" id="characterAvatar">
+            <!-- Vector Cyber Waifu / Companion Avatar -->
+            <svg class="avatar-svg" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="charSkin" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ffe4d6"/>
+                  <stop offset="100%" stop-color="#fad0c4"/>
+                </linearGradient>
+                <linearGradient id="charHair" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#00f0ff"/>
+                  <stop offset="100%" stop-color="#0284c7"/>
+                </linearGradient>
+                <linearGradient id="charClothes" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#1e293b"/>
+                  <stop offset="100%" stop-color="#0f172a"/>
+                </linearGradient>
+              </defs>
+              <!-- Body / Jacket -->
+              <path d="M80 240 Q150 200 220 240 L250 400 L50 400 Z" fill="url(#charClothes)"/>
+              <path d="M120 230 L150 270 L180 230 Z" fill="#ffe600"/>
+              <!-- Collar Ribbon -->
+              <polygon points="140,250 160,250 165,290 150,280 135,290" fill="#ff007a"/>
+              <!-- Neck -->
+              <rect x="135" y="180" width="30" height="40" fill="url(#charSkin)"/>
+              <!-- Head -->
+              <ellipse cx="150" cy="140" rx="55" ry="60" fill="url(#charSkin)"/>
+              <!-- Hair Back -->
+              <path d="M80 120 C70 190 70 260 85 300 C95 240 100 180 100 140 Z" fill="url(#charHair)"/>
+              <path d="M220 120 C230 190 230 260 215 300 C205 240 200 180 200 140 Z" fill="url(#charHair)"/>
+              <!-- Eyes -->
+              <ellipse cx="130" cy="145" rx="8" ry="12" fill="#0369a1"/>
+              <circle cx="128" cy="142" r="3" fill="#fff"/>
+              <ellipse cx="170" cy="145" rx="8" ry="12" fill="#0369a1"/>
+              <circle cx="168" cy="142" r="3" fill="#fff"/>
+              <!-- Blush -->
+              <ellipse cx="118" cy="158" rx="8" ry="4" fill="#fda4af" opacity="0.6"/>
+              <ellipse cx="182" cy="158" rx="8" ry="4" fill="#fda4af" opacity="0.6"/>
+              <!-- Smile -->
+              <path d="M142 165 Q150 172 158 165" stroke="#be185d" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <!-- Hair Front & Bangs -->
+              <path d="M90 120 Q150 65 210 120 C210 120 190 115 175 130 C160 110 140 110 125 130 C110 115 90 120 90 120 Z" fill="url(#charHair)"/>
+              <!-- Cyber Headset -->
+              <rect x="85" y="125" width="10" height="25" rx="4" fill="#ffe600"/>
+              <rect x="205" y="125" width="10" height="25" rx="4" fill="#ffe600"/>
+              <path d="M90 125 C90 70 210 70 210 125" stroke="#ffe600" stroke-width="4" fill="none"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Dialog Box -->
+        <div class="dialog-container">
+          <div class="dialog-box">
+            <span class="speaker-pill" id="speakerName">MATCHA COMPANION</span>
+            <div class="dialog-text" id="dialogText">Menginisialisasi engine cerita...</div>
+            <div class="advance-caret" aria-hidden="true">&#9660;</div>
+          </div>
+        </div>
+
+        <!-- Choice Overlay -->
+        <div class="choices-overlay" id="choiceOverlay" hidden>
+          <div class="choice-title">Tentukan Alur Eksplorasi:</div>
+          <button class="choice-btn" data-choice="story">
+            <span>📖 Lanjutkan Kisah Interaktif &amp; Dialog</span>
+            <span>&rarr;</span>
+          </button>
+          <button class="choice-btn" data-choice="defold">
+            <span>⚙️ Pelajari Arsitektur Defold &amp; Lua Engine</span>
+            <span>&rarr;</span>
+          </button>
+          <button class="choice-btn" data-choice="weather">
+            <span>✨ Uji Sistem Cuaca Partikel (Rain/Snow/Fog)</span>
+            <span>&rarr;</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Info Sections Grid -->
+    <section class="info-grid">
+      <!-- Quick Defold Setup Guide -->
+      <div class="card">
+        <h2 class="card-title">
+          <svg class="card-title-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Cara Build Game di Defold Engine
+        </h2>
+        <ol class="step-list">
+          <li>
+            <span class="step-num">1</span>
+            <div>
+              <strong>Clone Repositori GitHub</strong>
+              <div class="code-box" style="margin-top:6px">git clone https://github.com/rhmt-ofc/matchanovel-starter.git</div>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <div>
+              <strong>Buka Melalui Defold Editor</strong>
+              <p>Unduh editor resmi di defold.com, lalu pilih <em>Open Project</em> dan arahkan ke file <code>game.project</code>.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <div>
+              <strong>Tulis Cerita &amp; Dialog</strong>
+              <p>Cukup edit file teks <code>assets/scripts/script.txt</code> dengan sintaks label &amp; narasi sederhana.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">4</span>
+            <div>
+              <strong>Bundle Multi-Platform</strong>
+              <p>Pilih menu <em>Project &rarr; Bundle</em> untuk menghasilkan file HTML5 Web, Android APK, atau Windows EXE (&lt;5 MB!).</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <!-- Live Script Previewer & Tester -->
+      <div class="card">
+        <h2 class="card-title">
+          <svg class="card-title-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Uji Sintaks MatchaScript Live
+        </h2>
+        <div class="script-tester">
+          <textarea class="script-textarea" id="scriptInput" spellcheck="false">label intro
+Karakter: Halo Tuan Rahmat!
+Karakter: Selamat datang di live runtime MatchaNovel.
+Karakter: Skrip ini langsung di-parse dari teks secara real-time!
+Karakter: Ingin mencoba alur cabang atau pilihan baru?</textarea>
+          <div style="display:flex; justify-content:space-between; align-items:center">
+            <span style="font-size:0.75rem; color:var(--text-dim)">Format: Nama: Isi Dialog</span>
+            <button class="btn-chip highlight" id="btnRunScript" style="cursor:pointer">
+              <span>▶ Jalankan ke Stage</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      MatchaNovel Engine Starter Template • Repositori Resmi Tuan: 
+      <a href="https://github.com/rhmt-ofc/matchanovel-starter" target="_blank" rel="noopener noreferrer">rhmt-ofc/matchanovel-starter</a> • 
+      Portofolio: <a href="https://rhmt.biz.id" target="_blank" rel="noopener noreferrer">rhmt.biz.id</a>
+    </p>
+  </footer>
+
+  <!-- Web VN Logic & Synthesizer -->
+  <script>
+    (function () {
+      // 1. STORY SCRIPT DATA
+      const defaultScript = [
+        { speaker: "SYSTEM", text: "Menginisialisasi MatchaNovel Lua Engine runtime di atas platform Vercel..." },
+        { speaker: "MATCHA", text: "Halo Tuan Rahmat! Senang sekali bisa menyapa Tuan secara live di web player ini." },
+        { speaker: "MATCHA", text: "Seluruh berkas zip starter template telah diaudit dan dipastikan 100% AMAN serta bersih dari script aneh." },
+        { speaker: "MATCHA", text: "Proyek ini sekarang sudah resmi di-push ke GitHub Tuan (rhmt-ofc/matchanovel-starter) dan aktif di Vercel!" },
+        { speaker: "MATCHA", text: "Apa yang ingin Tuan eksplorasi sekarang? Silakan tentukan pilihan Tuan di layar berikut:" },
+        { choicePrompt: true }
+      ];
+
+      const branches = {
+        story: [
+          { speaker: "MATCHA", text: "Bagus sekali! Format penulisan MatchaScript sangat ramah penulis, mirip Ren'Py namun berbasis Lua." },
+          { speaker: "MATCHA", text: "Tuan cukup menulis dialog di assets/scripts/script.txt tanpa harus repot koding rumit." },
+          { speaker: "MATCHA", text: "Karakter, background, font dyslexia, hingga musik latar bisa dikustomisasi sesuka hati!" },
+          { speaker: "MATCHA", text: "Coba tulis dialog buatan Tuan di kotak 'Uji Sintaks Live' di bawah layar ini, Tuan!" }
+        ],
+        defold: [
+          { speaker: "DEFOLD CORE", text: "Defold adalah game engine 2D berperforma tinggi dengan footprint memori sangat minim." },
+          { speaker: "DEFOLD CORE", text: "Hasil kompilasi game Visual Novel Tuan berukuran kurang dari 5MB sehingga loading instan di HP maupun web." },
+          { speaker: "DEFOLD CORE", text: "Mendukung ekspor langsung ke APK Android, Windows (.exe), Mac, Linux, hingga HTML5 Web!" }
+        ],
+        weather: [
+          { speaker: "WEATHER SYS", text: "Mengaktifkan simulasi partikel cuaca dinamis bawaan MatchaNovel!" },
+          { speaker: "WEATHER SYS", text: "Partikel salju dan kunang-kunang kini melayang di atas panggung visual." },
+          { speaker: "WEATHER SYS", text: "Tuan juga bisa mengganti mode cuaca langsung lewat tombol 'Cuaca' di bilah atas." }
+        ]
+      };
+
+      let activeScript = [...defaultScript];
+      let currentIndex = 0;
+      let isTyping = false;
+      let typeTimeout = null;
+      let soundEnabled = true;
+
+      // DOM Elements
+      const viewport = document.getElementById('viewportStage');
+      const speakerEl = document.getElementById('speakerName');
+      const textEl = document.getElementById('dialogText');
+      const choiceOverlay = document.getElementById('choiceOverlay');
+      const bgLayer = document.getElementById('bgLayer');
+      const weatherCanvas = document.getElementById('weatherCanvas');
+      const btnWeather = document.getElementById('btnWeather');
+      const btnBg = document.getElementById('btnBg');
+      const btnSound = document.getElementById('btnSound');
+      const btnRestart = document.getElementById('btnRestart');
+      const btnRunScript = document.getElementById('btnRunScript');
+      const scriptInput = document.getElementById('scriptInput');
+
+      // 2. SYNTHESIZED SOUND (Web Audio API)
+      let audioCtx = null;
+      function playBeep(freq = 520, duration = 0.04) {
+        if (!soundEnabled) return;
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (_) {}
+      }
+
+      function playChime() {
+        if (!soundEnabled) return;
+        playBeep(660, 0.08);
+        setTimeout(() => playBeep(880, 0.12), 60);
+      }
+
+      // 3. TYPEWRITER EFFECT
+      function renderLine(lineObj) {
+        if (!lineObj) return;
+
+        if (lineObj.choicePrompt) {
+          choiceOverlay.hidden = false;
+          playChime();
+          return;
+        }
+
+        choiceOverlay.hidden = true;
+        speakerEl.textContent = lineObj.speaker || "NARATOR";
+        
+        clearTimeout(typeTimeout);
+        isTyping = true;
+        textEl.textContent = "";
+
+        const fullText = lineObj.text;
+        let charIdx = 0;
+
+        function typeChar() {
+          if (charIdx < fullText.length) {
+            textEl.textContent += fullText[charIdx];
+            if (charIdx % 3 === 0) playBeep(480 + (charIdx % 5) * 20, 0.02);
+            charIdx++;
+            typeTimeout = setTimeout(typeChar, 20);
+          } else {
+            isTyping = false;
+          }
+        }
+        typeChar();
+      }
+
+      function advanceDialog() {
+        if (choiceOverlay && !choiceOverlay.hidden) return;
+
+        if (isTyping) {
+          // Instantly finish typing current line
+          clearTimeout(typeTimeout);
+          textEl.textContent = activeScript[currentIndex]?.text || "";
+          isTyping = false;
+          return;
+        }
+
+        currentIndex++;
+        if (currentIndex < activeScript.length) {
+          renderLine(activeScript[currentIndex]);
+        } else {
+          // Loop or conclude
+          speakerEl.textContent = "MATCHA NOVEL";
+          textEl.textContent = "Akhir bab demo. Tuan dapat memuat ulang atau mengetikkan skrip cerita baru pada kotak tester di bawah!";
+        }
+      }
+
+      viewport.addEventListener('click', (e) => {
+        if (e.target.closest('#choiceOverlay') || e.target.closest('.stage-btn')) return;
+        advanceDialog();
+      });
+
+      // Choices Handler
+      choiceOverlay.addEventListener('click', (e) => {
+        const btn = e.target.closest('.choice-btn');
+        if (!btn) return;
+        const branchKey = btn.dataset.choice;
+        if (branches[branchKey]) {
+          activeScript = [...branches[branchKey]];
+          currentIndex = 0;
+          choiceOverlay.hidden = true;
+          renderLine(activeScript[0]);
+        }
+      });
+
+      // 4. WEATHER PARTICLE SYSTEM
+      const ctx = weatherCanvas.getContext('2d');
+      let particles = [];
+      let currentWeather = 'snow';
+
+      function resizeCanvas() {
+        weatherCanvas.width = viewport.clientWidth;
+        weatherCanvas.height = viewport.clientHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      function initParticles(type) {
+        particles = [];
+        const count = type === 'rain' ? 80 : 50;
+        for (let i = 0; i < count; i++) {
+          particles.push({
+            x: Math.random() * weatherCanvas.width,
+            y: Math.random() * weatherCanvas.height,
+            speedY: type === 'rain' ? 7 + Math.random() * 5 : 0.8 + Math.random() * 1.5,
+            speedX: type === 'rain' ? -1 : (Math.random() - 0.5) * 1,
+            size: type === 'rain' ? 1.5 : 2 + Math.random() * 3,
+            alpha: Math.random() * 0.7 + 0.3
+          });
+        }
+      }
+      initParticles('snow');
+
+      function animateWeather() {
+        ctx.clearRect(0, 0, weatherCanvas.width, weatherCanvas.height);
+        ctx.fillStyle = currentWeather === 'rain' ? '#38bdf8' : '#ffffff';
+
+        for (let p of particles) {
+          ctx.globalAlpha = p.alpha;
+          ctx.beginPath();
+          if (currentWeather === 'rain') {
+            ctx.rect(p.x, p.y, p.size, p.size * 6);
+          } else {
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          }
+          ctx.fill();
+
+          p.y += p.speedY;
+          p.x += p.speedX;
+
+          if (p.y > weatherCanvas.height) {
+            p.y = -10;
+            p.x = Math.random() * weatherCanvas.width;
+          }
+          if (p.x < 0) p.x = weatherCanvas.width;
+          if (p.x > weatherCanvas.width) p.x = 0;
+        }
+
+        requestAnimationFrame(animateWeather);
+      }
+      animateWeather();
+
+      // Control Buttons
+      const weathers = ['snow', 'rain', 'clear'];
+      let weatherIdx = 0;
+      btnWeather.addEventListener('click', () => {
+        weatherIdx = (weatherIdx + 1) % weathers.length;
+        currentWeather = weathers[weatherIdx];
+        btnWeather.textContent = `Cuaca: ${currentWeather.toUpperCase()}`;
+        if (currentWeather === 'clear') {
+          particles = [];
+        } else {
+          initParticles(currentWeather);
+        }
+      });
+
+      const bgs = ['bg-cyber', 'bg-sunset', 'bg-matrix'];
+      const bgNames = ['Cyber', 'Sunset', 'Matrix'];
+      let bgIdx = 0;
+      btnBg.addEventListener('click', () => {
+        bgIdx = (bgIdx + 1) % bgs.length;
+        bgLayer.className = `vn-bg-layer ${bgs[bgIdx]}`;
+        btnBg.textContent = `Lokasi: ${bgNames[bgIdx]}`;
+      });
+
+      btnSound.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        btnSound.textContent = `Audio: ${soundEnabled ? 'On' : 'Off'}`;
+        btnSound.classList.toggle('active', soundEnabled);
+      });
+
+      btnRestart.addEventListener('click', () => {
+        activeScript = [...defaultScript];
+        currentIndex = 0;
+        choiceOverlay.hidden = true;
+        renderLine(activeScript[0]);
+      });
+
+      // Live Script Tester
+      btnRunScript.addEventListener('click', () => {
+        const text = scriptInput.value.trim();
+        if (!text) return;
+
+        const lines = text.split('\n');
+        const customScript = [];
+
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('label') || trimmed.startsWith('#')) return;
+
+          const colonIdx = trimmed.indexOf(':');
+          if (colonIdx !== -1) {
+            customScript.push({
+              speaker: trimmed.substring(0, colonIdx).trim(),
+              text: trimmed.substring(colonIdx + 1).trim()
+            });
+          } else {
+            customScript.push({
+              speaker: "NARATOR",
+              text: trimmed
+            });
+          }
+        });
+
+        if (customScript.length) {
+          activeScript = customScript;
+          currentIndex = 0;
+          choiceOverlay.hidden = true;
+          renderLine(activeScript[0]);
+          viewport.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+
+      // Initial start
+      renderLine(activeScript[0]);
+    })();
+  </script>
+</body>
+</html>

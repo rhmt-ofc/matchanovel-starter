@@ -1,0 +1,4 @@
+label start
+
+This is an empty MatchNovel project.
+Edit the file /assets/scripts/script.txt to start.

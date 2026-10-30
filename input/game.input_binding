@@ -1,0 +1,56 @@
+key_trigger {
+  input: KEY_SPACE
+  action: "continue"
+}
+key_trigger {
+  input: KEY_LCTRL
+  action: "skip"
+}
+key_trigger {
+  input: KEY_RCTRL
+  action: "skip"
+}
+key_trigger {
+  input: KEY_F
+  action: "fullscreen"
+}
+key_trigger {
+  input: KEY_TAB
+  action: "toggle_skip"
+}
+key_trigger {
+  input: KEY_PAGEUP
+  action: "back"
+}
+key_trigger {
+  input: KEY_PAGEDOWN
+  action: "forward"
+}
+key_trigger {
+  input: KEY_ENTER
+  action: "continue"
+}
+key_trigger {
+  input: KEY_UP
+  action: "back"
+}
+key_trigger {
+  input: KEY_DOWN
+  action: "forward"
+}
+mouse_trigger {
+  input: MOUSE_BUTTON_1
+  action: "touch"
+}
+mouse_trigger {
+  input: MOUSE_BUTTON_2
+  action: "menu"
+}
+mouse_trigger {
+  input: MOUSE_WHEEL_UP
+  action: "back"
+}
+mouse_trigger {
+  input: MOUSE_WHEEL_DOWN
+  action: "forward"
+}

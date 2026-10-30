@@ -1,0 +1,38 @@
+[bootstrap]
+main_collection = /main/main.collectionc
+
+[script]
+shared_state = 1
+
+[display]
+width = 960
+height = 540
+high_dpi = 1
+
+[android]
+input_method = HiddenInputField
+
+[project]
+title = MatchaNovel
+version = 0.1
+custom_resources = assets
+dependencies = 
+
+[sprite]
+max_count = 512
+
+[particle_fx]
+max_particle_count = 8192
+
+[gui]
+max_particle_count = 4096
+
+[html5]
+scale_mode = fit
+splash_image = /assets/splash.jpg
+show_console_banner = 0
+
+[fmod]
+speaker_mode = stereo
+lib_path = fmod/res
+
